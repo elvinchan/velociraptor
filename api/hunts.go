@@ -41,6 +41,13 @@ func (self *ApiServer) GetHuntFlows(
 			"User is not allowed to view hunt results.")
 	}
 
+	allow := services.GetExternalFilter().FilterResource(
+		principal, services.ExternalResourceTypeHunt, in.HuntId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view hunt results due to filter.")
+	}
+
 	options, err := tables.GetTableOptions(in)
 	if err != nil {
 		return nil, Status(self.verbose, err)
@@ -106,6 +113,12 @@ func (self *ApiServer) GetHuntTable(
 	if !perm || err != nil {
 		return nil, PermissionDenied(err,
 			"User is not allowed to view hunt results.")
+	}
+	allow := services.GetExternalFilter().FilterResource(
+		principal, services.ExternalResourceTypeHunt, in.HuntId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view hunt results due to filter.")
 	}
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
@@ -282,7 +295,10 @@ func (self *ApiServer) CreateHunt(
 			Set("details", in).
 			Set("orgs", orgs_we_scheduled))
 
-	return result, nil
+	err = services.GetExternalFilter().RecordResource(
+		principal, services.ExternalResourceTypeHunt, in.HuntId)
+
+	return result, err
 }
 
 func (self *ApiServer) ModifyHunt(
@@ -310,6 +326,12 @@ func (self *ApiServer) ModifyHunt(
 	if !perm || err != nil {
 		return nil, PermissionDenied(err,
 			"User is not allowed to modify hunts.")
+	}
+	allow := services.GetExternalFilter().FilterResource(
+		principal, services.ExternalResourceTypeHunt, in.HuntId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to modify hunts due to filter.")
 	}
 
 	services.LogAudit(ctx,
@@ -363,10 +385,18 @@ func (self *ApiServer) ListHunts(
 		return nil, Status(self.verbose, err)
 	}
 
+	ef := services.GetExternalFilter()
+
 	// Provide only a summary for list hunts GUI
 	if in.Summary {
 		summary := &api_proto.ListHuntsResponse{}
 		for _, item := range result.Items {
+			allow := ef.FilterResource(
+				principal, services.ExternalResourceTypeHunt, item.HuntId)
+			if !allow {
+				continue
+			}
+
 			summary.Items = append(summary.Items, &api_proto.Hunt{
 				HuntId:          item.HuntId,
 				HuntDescription: item.HuntDescription,
@@ -407,6 +437,12 @@ func (self *ApiServer) GetHunt(
 		return nil, PermissionDenied(err,
 			"User is not allowed to view hunts.")
 	}
+	allow := services.GetExternalFilter().FilterResource(
+		principal, services.ExternalResourceTypeHunt, in.HuntId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view hunts due to filter.")
+	}
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 	if err != nil {
@@ -440,6 +476,12 @@ func (self *ApiServer) GetHuntResults(
 	if !perm || err != nil {
 		return nil, PermissionDenied(err,
 			"User is not allowed to view results.")
+	}
+	allow := services.GetExternalFilter().FilterResource(
+		principal, services.ExternalResourceTypeHunt, in.HuntId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view results due to filter.")
 	}
 
 	env := ordereddict.NewDict().

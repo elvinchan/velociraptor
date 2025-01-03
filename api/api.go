@@ -93,6 +93,13 @@ func (self *ApiServer) CancelFlow(
 		return nil, PermissionDenied(err,
 			"User is not allowed to cancel flows.")
 	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to cancel flows due to filter.")
+	}
 
 	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
@@ -132,6 +139,22 @@ func (self *ApiServer) GetReport(
 	if !perm || err != nil {
 		return nil, PermissionDenied(err,
 			"User is not allowed to view reports.")
+	}
+	ef := services.GetExternalFilter()
+	if in.ClientId != "" {
+		allow := ef.FilterResource(
+			user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+		if !allow {
+			return nil, PermissionDenied(err,
+				"User is not allowed to view reports due to filter.")
+		}
+	} else if in.HuntId != "" {
+		allow := ef.FilterResource(
+			user_record.Name, services.ExternalResourceTypeHunt, in.HuntId)
+		if !allow {
+			return nil, PermissionDenied(err,
+				"User is not allowed to view reports due to filter.")
+		}
 	}
 
 	acl_manager := acl_managers.NewServerACLManager(org_config_obj, principal)
@@ -269,20 +292,25 @@ func (self *ApiServer) NotifyClients(
 		return nil, PermissionDenied(err,
 			"User is not allowed to launch flows.")
 	}
+	if in.ClientId == "" {
+		return nil, status.Error(codes.InvalidArgument,
+			"client id should be specified")
+	}
+	allow := services.GetExternalFilter().FilterResource(
+		principal, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to launch flows due to filter.")
+	}
 
 	notifier, err := services.GetNotifier(org_config_obj)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	if in.ClientId != "" {
-		self.server_obj.Info("sending notification to %s", in.ClientId)
-		err = notifier.NotifyListener(ctx, org_config_obj, in.ClientId,
-			"API.NotifyClients")
-	} else {
-		return nil, status.Error(codes.InvalidArgument,
-			"client id should be specified")
-	}
+	self.server_obj.Info("sending notification to %s", in.ClientId)
+	err = notifier.NotifyListener(ctx, org_config_obj, in.ClientId,
+		"API.NotifyClients")
 	return &emptypb.Empty{}, Status(self.verbose, err)
 }
 
@@ -310,6 +338,11 @@ func (self *ApiServer) LabelClients(
 
 	labeler := services.GetLabeler(org_config_obj)
 	for _, client_id := range in.ClientIds {
+		allow := services.GetExternalFilter().FilterResource(
+			principal, services.ExternalResourceTypeClient, client_id)
+		if !allow {
+			continue
+		}
 		for _, label := range in.Labels {
 			switch in.Operation {
 			case "set":
@@ -369,6 +402,13 @@ func (self *ApiServer) GetFlowDetails(
 		return nil, PermissionDenied(err,
 			"User is not allowed to launch flows.")
 	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to launch flows due to filter.")
+	}
 
 	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
@@ -400,6 +440,13 @@ func (self *ApiServer) GetFlowRequests(
 	if !perm || err != nil {
 		return nil, PermissionDenied(err,
 			"User is not allowed to view flows.")
+	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view flows due to filter.")
 	}
 
 	launcher, err := services.GetLauncher(org_config_obj)
@@ -498,6 +545,13 @@ func (self *ApiServer) VFSListDirectory(
 		return nil, PermissionDenied(err,
 			"User is not allowed to view the VFS.")
 	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view the VFS due to filter.")
+	}
 
 	vfs_service, err := services.GetVFSService(org_config_obj)
 	if err != nil {
@@ -527,6 +581,13 @@ func (self *ApiServer) VFSStatDirectory(
 	if !perm || err != nil {
 		return nil, PermissionDenied(err,
 			"User is not allowed to launch flows.")
+	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to launch flows due to filter.")
 	}
 
 	vfs_service, err := services.GetVFSService(org_config_obj)
@@ -558,6 +619,13 @@ func (self *ApiServer) VFSStatDownload(
 		return nil, PermissionDenied(err,
 			"User is not allowed to view the VFS.")
 	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view the VFS due to filter.")
+	}
 
 	vfs_service, err := services.GetVFSService(org_config_obj)
 	if err != nil {
@@ -588,6 +656,13 @@ func (self *ApiServer) VFSRefreshDirectory(
 	if !perm || err != nil {
 		return nil, PermissionDenied(err,
 			"User is not allowed to launch flows.")
+	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to launch flows due to filter.")
 	}
 
 	result, err := vfsRefreshDirectory(
@@ -656,6 +731,7 @@ func (self *ApiServer) GetTable(
 		return nil, PermissionDenied(err,
 			"User is not allowed to view results.")
 	}
+	// TODO: check filter?
 
 	result, err := tables.GetTable(ctx, org_config_obj, in)
 	if err != nil {
@@ -879,6 +955,7 @@ func (self *ApiServer) GetServerMonitoringState(
 		return nil, PermissionDenied(err,
 			fmt.Sprintf("User is not allowed to read results (%v).", permissions))
 	}
+	// TODO: check filter ?
 
 	server_event_manager, err := services.GetServerEventManager(org_config_obj)
 	if err != nil {
@@ -1005,6 +1082,21 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	if !perm || err != nil {
 		return nil, PermissionDenied(err,
 			fmt.Sprintf("User is not allowed to create downloads (%v).", permissions))
+	}
+	if in.FlowId != "" && in.ClientId != "" {
+		allow := services.GetExternalFilter().FilterResource(
+			principal, services.ExternalResourceTypeClient, in.ClientId)
+		if !allow {
+			return nil, PermissionDenied(err,
+				"User is not allowed to create downloads due to filter.")
+		}
+	} else if in.HuntId != "" {
+		allow := services.GetExternalFilter().FilterResource(
+			principal, services.ExternalResourceTypeHunt, in.HuntId)
+		if !allow {
+			return nil, PermissionDenied(err,
+				"User is not allowed to create downloads due to filter.")
+		}
 	}
 
 	// Log an audit event.

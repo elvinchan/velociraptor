@@ -74,9 +74,20 @@ func (self *Indexer) searchRecents(
 
 	go func() {
 		defer resolver.Close()
+		users := services.GetUserManager()
+		user_record, _, err := users.GetUserFromContext(ctx)
+		if err != nil {
+			// TODO: log
+			return
+		}
+		ef := services.GetExternalFilter()
 		for _, child := range children {
 			client_id := child.Base()
-
+			allow := ef.FilterResource(
+				user_record.Name, services.ExternalResourceTypeClient, client_id)
+			if !allow {
+				continue
+			}
 			// Filter out the clients that do not belong in this
 			// org. The users' MRU is currently global and stored in
 			// the root org - it contains all clients the user has

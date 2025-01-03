@@ -51,6 +51,13 @@ func (self *ApiServer) GetClientMetadata(
 		return nil, PermissionDenied(err,
 			"User is not allowed to view clients.")
 	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view clients due to filter.")
+	}
 
 	client_info_manager, err := services.GetClientInfoManager(org_config_obj)
 	if err != nil {
@@ -101,6 +108,13 @@ func (self *ApiServer) SetClientMetadata(
 		return nil, PermissionDenied(err,
 			"User is not allowed to modify client labels.")
 	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to modify client labels due to filter.")
+	}
 
 	client_info_manager, err := services.GetClientInfoManager(org_config_obj)
 	if err != nil {
@@ -139,6 +153,13 @@ func (self *ApiServer) GetClient(
 	if !perm || err != nil {
 		return nil, PermissionDenied(err,
 			"User is not allowed to view clients.")
+	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view clients due to filter.")
 	}
 
 	indexer, err := services.GetIndexer(org_config_obj)

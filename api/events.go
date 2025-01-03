@@ -149,6 +149,13 @@ func (self *ApiServer) ListAvailableEventResults(
 		return nil, PermissionDenied(err,
 			"User is not allowed to view results.")
 	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view results due to filter.")
+	}
 
 	client_monitoring_service, err := services.ClientEventManager(org_config_obj)
 	if err != nil {

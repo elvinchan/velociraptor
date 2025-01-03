@@ -28,6 +28,13 @@ func (self *ApiServer) GetClientFlows(
 		return nil, PermissionDenied(err,
 			"User is not allowed to view flows.")
 	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view flows due to filter.")
+	}
 
 	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {

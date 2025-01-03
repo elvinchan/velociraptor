@@ -152,6 +152,13 @@ func (self *ApiServer) VFSListDirectoryFiles(
 		return nil, PermissionDenied(err,
 			"User is not allowed to view the VFS.")
 	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view the VFS due to filter.")
+	}
 
 	vfs_service, err := services.GetVFSService(org_config_obj)
 	if err != nil {
@@ -184,6 +191,13 @@ func (self *ApiServer) VFSDownloadFile(
 	if !perm || err != nil {
 		return nil, PermissionDenied(err,
 			"User is not allowed to collect files from the VFS.")
+	}
+	ef := services.GetExternalFilter()
+	allow := ef.FilterResource(
+		user_record.Name, services.ExternalResourceTypeClient, in.ClientId)
+	if !allow {
+		return nil, PermissionDenied(err,
+			"User is not allowed to collect files from the VFS due to filter.")
 	}
 
 	launcher, err := services.GetLauncher(org_config_obj)

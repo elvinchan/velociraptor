@@ -114,6 +114,7 @@ func (self *ApiServer) NewNotebook(
 		return nil, PermissionDenied(err,
 			"User is not allowed to create notebooks.")
 	}
+	// TODO: check in.Public field, external users cannot create public notebook
 
 	notebook_manager, err := services.GetNotebookManager(org_config_obj)
 	if err != nil {
@@ -178,6 +179,7 @@ func (self *ApiServer) UpdateNotebook(
 		return nil, PermissionDenied(err,
 			"User is not allowed to edit notebooks.")
 	}
+	// TODO: check in.Public field, external users cannot create public notebook
 
 	// If the notebook is not properly shared with the user they
 	// may not edit it.

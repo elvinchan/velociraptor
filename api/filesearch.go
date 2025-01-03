@@ -38,6 +38,7 @@ func (self *ApiServer) SearchFile(ctx context.Context,
 		return nil, PermissionDenied(err,
 			"User is not allowed to search files.")
 	}
+	// TODO: check filter ?
 
 	if len(in.VfsComponents) == 0 {
 		return nil, PermissionDenied(err, "No file specified")

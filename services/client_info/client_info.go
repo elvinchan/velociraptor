@@ -66,10 +66,24 @@ type ClientInfoManager struct {
 
 func (self *ClientInfoManager) ListClients(ctx context.Context) <-chan string {
 	output_chan := make(chan string)
+	users := services.GetUserManager()
+	user_record, _, err := users.GetUserFromContext(ctx)
+	if err != nil {
+		defer close(output_chan)
+		// TODO: log
+		return output_chan
+	}
+
+	ef := services.GetExternalFilter()
 	go func() {
 		defer close(output_chan)
 
 		for _, key := range self.storage.Keys() {
+			allow := ef.FilterResource(
+				user_record.Name, services.ExternalResourceTypeClient, key)
+			if !allow {
+				continue
+			}
 			select {
 			case <-ctx.Done():
 				return

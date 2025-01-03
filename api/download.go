@@ -484,6 +484,16 @@ func downloadFileStore(prefix []string) http.Handler {
 			return
 		}
 
+		ef := services.GetExternalFilter()
+		// external filter
+		allow := ef.FilterResource(user_record.Name,
+			services.ExternalResourceTypeFileStore,
+			path_spec.AsFilestoreFilename(org_config_obj))
+		if !allow {
+			returnError(w, 403, "User is not allowed to read files due to filter.")
+			return
+		}
+
 		file_store_factory := file_store.GetFileStore(org_config_obj)
 		fd, err := file_store_factory.ReadFile(path_spec)
 		if err != nil {

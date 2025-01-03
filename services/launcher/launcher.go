@@ -230,6 +230,18 @@ func (self *Launcher) CompileCollectorArgs(
 			return nil, err
 		}
 
+		ef := services.GetExternalFilter()
+		users := services.GetUserManager()
+		user_record, _, err := users.GetUserFromContext(ctx)
+		if err != nil {
+			return nil, err
+		}
+		allow := ef.FilterResource(
+			user_record.Name, services.ExternalResourceTypeClient, collector_request.ClientId)
+		if !allow {
+			return nil, err
+		}
+
 		// Adjust collection wide resources to be the maximum
 		// number of all default
 		if artifact.Resources != nil {

@@ -220,7 +220,20 @@ func (self *Indexer) SearchIndexWithPrefix(
 			return true
 		})
 
+		users := services.GetUserManager()
+		user_record, _, err := users.GetUserFromContext(ctx)
+		if err != nil {
+			// TODO: log
+			return
+		}
+		ef := services.GetExternalFilter()
 		for _, record := range results {
+			allow := ef.FilterResource(user_record.Name,
+				services.ExternalResourceTypeClient, record.IndexRecord.Entity)
+			if !allow {
+				continue
+			}
+
 			select {
 			case <-ctx.Done():
 				return

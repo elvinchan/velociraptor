@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -40,10 +41,22 @@ func (self *Indexer) searchRecentsChan(
 
 	go func() {
 		defer close(output_chan)
+		users := services.GetUserManager()
+		user_record, _, err := users.GetUserFromContext(ctx)
+		if err != nil {
+			// TODO: log
+			return
+		}
+		ef := services.GetExternalFilter()
 
 		// Sort the children in reverse order - most recent first.
 		for i := len(children) - 1; i >= 0; i-- {
 			client_id := children[i].Base()
+			allow := ef.FilterResource(
+				user_record.Name, services.ExternalResourceTypeClient, client_id)
+			if !allow {
+				continue
+			}
 			api_client, err := self.FastGetApiClient(
 				ctx, config_obj, client_id)
 			if err != nil {

@@ -52,6 +52,7 @@ func (self *ApiServer) GetSubject(
 			return nil, Status(self.verbose, err)
 		}
 	}
+	// TODO: check filter ?
 
 	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
@@ -104,6 +105,7 @@ func (self *ApiServer) SetSubject(
 			return nil, Status(self.verbose, err)
 		}
 	}
+	// TODO: check filter ?
 
 	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
@@ -169,6 +171,7 @@ func (self *ApiServer) ListChildren(
 			return nil, Status(self.verbose, err)
 		}
 	}
+	// TODO: check filter ?
 
 	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
@@ -226,6 +229,7 @@ func (self *ApiServer) DeleteSubject(
 			return nil, Status(self.verbose, err)
 		}
 	}
+	// TODO: check filter ?
 	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
 		return nil, Status(self.verbose, err)
